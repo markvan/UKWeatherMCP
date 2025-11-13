@@ -10,9 +10,7 @@ mcp = FastMCP("weather")
 
 # Constants
 OPENWEATHER_API_BASE = "https://api.openweathermap.org/data/2.5/weather?"
-
 USER_AGENT = "weather-app/1.0"
-
 
 async def make_weather_request(url: str) -> dict[str, Any] | None:
     """Make a request to the NWS API with proper error handling."""
@@ -66,7 +64,7 @@ async def get_weather(latitude: float, longitude: float) -> str:
     weather += str(weather_data['main']['humidity'])
     weather += ' wind '
     weather += str(weather_data['wind']['speed'])
-    weather +=  'using the weather station at '
+    weather +=  ' using the weather station at '
     weather += weather_data['name']
 
     return weather
@@ -75,9 +73,7 @@ async def get_weather(latitude: float, longitude: float) -> str:
 def main():
     # Initialize and run the server
     mcp.run(transport='stdio')
-    # w = await get_weather(51.523392,-0.116664)
-    # print(w)
+
 
 if __name__ == "__main__":
     main()
-    # asyncio.run(main())
