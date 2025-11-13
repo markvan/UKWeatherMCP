@@ -1,7 +1,9 @@
+import sys
 from typing import Any
 import httpx
 from mcp.server.fastmcp import FastMCP
 import keys
+import json
 
 # Initialize FastMCP server
 mcp = FastMCP("weather")
@@ -35,26 +37,37 @@ async def get_weather(latitude: float, longitude: float) -> str:
         longitude: Longitude of the location
     """
     # First get the forecast grid endpoint
-    weather_url = f"{OPENWEATHER_API_BASE}lat={latitude}lon={longitude}&units=metric&appid={keys.OPENWEATHER_API_KEY}"
+    weather_url = f"{OPENWEATHER_API_BASE}lat={latitude}&lon={longitude}&units=metric&appid={keys.OPENWEATHER_API_KEY}"
     weather_data = await make_weather_request(weather_url)
 
     if not weather_data:
         return "Unable to fetch forecast data for this location."
 
     # Get the current weather
-    weather_data = await make_weather_request(weather_url)
+    weather_dict = await make_weather_request(weather_url)
 
-    if not weather_data:
+    if not weather_dict:
         return "Unable to fetch detailed forecast."
 
-    # Extract the weather data into a string
-    weather = []
+    # Safely get the first weather entry
+    weather_list = weather_dict.get("weather", [])
+    if not weather_list:
+        return "No weather information available."
 
-    weather = weather_data['weather']['main'] + ' more detail: ' + weather_data['weather']['description']
-    weather.append(' tempreture ' + weather_data['main']['temp'])
-    weather.append(' humidity ' + weather_data['main']['humidity'])
-    weather.append(' wind ' + weather_data['wind']['speed'])
-    weather.append(' at weather station ' + weather_data['weatherstation']['name'])
+    first_weather = weather_list[0]
+
+    overall = first_weather.get("main", "Unknown")
+    detail = first_weather.get("description", "no description")
+
+    weather = overall + " more detail: " + detail
+    weather += ' temperature '
+    weather += str(weather_data['main']['temp'])
+    weather += ' humidity '
+    weather += str(weather_data['main']['humidity'])
+    weather += ' wind '
+    weather += str(weather_data['wind']['speed'])
+    weather +=  'using the weather station at '
+    weather += weather_data['name']
 
     return weather
 
@@ -62,6 +75,9 @@ async def get_weather(latitude: float, longitude: float) -> str:
 def main():
     # Initialize and run the server
     mcp.run(transport='stdio')
+    # w = await get_weather(51.523392,-0.116664)
+    # print(w)
 
 if __name__ == "__main__":
     main()
+    # asyncio.run(main())
