@@ -1,17 +1,18 @@
 from typing import Any
 import httpx
 from mcp.server.fastmcp import FastMCP
+import keys
 
 # Initialize FastMCP server
 mcp = FastMCP("weather")
 
 # Constants
-OPENWEATHER_API_BASE = "https://api.weather.gov"
+OPENWEATHER_API_BASE = "https://api.openweathermap.org/data/2.5/weather?"
 
 USER_AGENT = "weather-app/1.0"
 
 
-async def make_nws_request(url: str) -> dict[str, Any] | None:
+async def make_weather_request(url: str) -> dict[str, Any] | None:
     """Make a request to the NWS API with proper error handling."""
     headers = {
         "User-Agent": USER_AGENT,
@@ -25,22 +26,8 @@ async def make_nws_request(url: str) -> dict[str, Any] | None:
         except Exception:
             return None
 
-
-def format_alert(feature: dict) -> str:
-    """Format an alert feature into a readable string."""
-    props = feature["properties"]
-    return f"""
-Event: {props.get('event', 'Unknown')}
-Area: {props.get('areaDesc', 'Unknown')}
-Severity: {props.get('severity', 'Unknown')}
-Description: {props.get('description', 'No description available')}
-Instructions: {props.get('instruction', 'No specific instructions provided')}
-"""
-
-
-
 @mcp.tool()
-async def get_forecast(latitude: float, longitude: float) -> str:
+async def get_weather(latitude: float, longitude: float) -> str:
     """Get weather forecast for a location.
 
     Args:
@@ -48,32 +35,28 @@ async def get_forecast(latitude: float, longitude: float) -> str:
         longitude: Longitude of the location
     """
     # First get the forecast grid endpoint
-    points_url = f"{NWS_API_BASE}/points/{latitude},{longitude}"
-    points_data = await make_nws_request(points_url)
+    weather_url = f"{OPENWEATHER_API_BASE}lat={latitude}lon={longitude}&units=metric&appid={keys.OPENWEATHER_API_KEY}"
+    weather_data = await make_weather_request(weather_url)
 
-    if not points_data:
+    if not weather_data:
         return "Unable to fetch forecast data for this location."
 
-    # Get the forecast URL from the points response
-    forecast_url = points_data["properties"]["forecast"]
-    forecast_data = await make_nws_request(forecast_url)
+    # Get the current weather
+    weather_data = await make_weather_request(weather_url)
 
-    if not forecast_data:
+    if not weather_data:
         return "Unable to fetch detailed forecast."
 
-    # Format the periods into a readable forecast
-    periods = forecast_data["properties"]["periods"]
-    forecasts = []
-    for period in periods[:5]:  # Only show next 5 periods
-        forecast = f"""
-{period['name']}:
-Temperature: {period['temperature']}°{period['temperatureUnit']}
-Wind: {period['windSpeed']} {period['windDirection']}
-Forecast: {period['detailedForecast']}
-"""
-        forecasts.append(forecast)
+    # Extract the weather data into a string
+    weather = []
 
-    return "\n---\n".join(forecasts)
+    weather = weather_data['weather']['main'] + ' more detail: ' + weather_data['weather']['description']
+    weather.append(' tempreture ' + weather_data['main']['temp'])
+    weather.append(' humidity ' + weather_data['main']['humidity'])
+    weather.append(' wind ' + weather_data['wind']['speed'])
+    weather.append(' at weather station ' + weather_data['weatherstation']['name'])
+
+    return weather
 
 
 def main():
