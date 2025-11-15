@@ -96,6 +96,11 @@ Obviously you will need an Anthropic API key, subscription required. As far as I
 my Anthropic account from Claude Desktop and that action grabbed my
 API key.
 
+You may be interested in reading a 
+[Reddit post on using MCP severs](https://www.reddit.com/r/ClaudeAI/comments/1ji8ruv/my_claude_workflow_guide_advanced_setup_with_mcp/). 
+Includes [tavily](https://www.tavily.com/) which is on my list to check out. 
+Warning, written around March 2025.
+
 
 
 ### Configuring the MCP server for a Chatbot/MCP client example
