@@ -75,9 +75,6 @@ is
 
 ```
 {
-  "preferences": {
-    "quickEntryDictationShortcut": "capslock"
-  },
   "mcpServers": {
     "weather": {
       "command": "/opt/homebrew/bin/uv",
